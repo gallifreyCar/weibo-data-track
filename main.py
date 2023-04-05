@@ -1,6 +1,22 @@
 import requests
 
 
+def get_user_info(response_json):
+    """
+    从响应 JSON 中解析出用户信息。
+    :param response_json: 响应 JSON 对象
+    :return: 包含用户信息的字典
+    """
+    user = response_json['data']['user']
+    return {
+        'screen_name': user['screen_name'],  # 微博名
+        'verified_reason': user['verified_reason'],  # 认证信息
+        'description': user['description'],  # 描述
+        'followers_count': user['followers_count'],  # 粉丝数
+        'friends_count': user['friends_count'],  # 关注数
+        'statuses_count': user['statuses_count']  # 微博数
+    }
+
 
 def weibo(cookie, custom, uid, flag):
     url = 'https://weibo.com/ajax/profile/info?'
@@ -13,28 +29,14 @@ def weibo(cookie, custom, uid, flag):
     }
     response = requests.get(url=completeUrl, headers=headers)
 
-    data = response.json()['data']
-    user = data['user']
-    # 微博名
-    screen_name = user['screen_name']
-    # 认证信息
-    verified_reason = user['verified_reason']
-    # 描述
-    description = user['description']
-    # 粉丝数
-    followers_count = user['followers_count']
-    # 关注数
-    friends_count = user['friends_count']
-    # 微博数
-    statuses_count = user['statuses_count']
+    user_info = get_user_info(response.json())
+
 
     # 保存到excel
     import pandas as pd
     import openpyxl
 
-    df = pd.DataFrame(
-        {'微博名': [screen_name], '认证信息': [verified_reason], '描述': [description], '粉丝数': [followers_count],
-         '关注数': [friends_count], '微博数': [statuses_count]})
+    df = pd.DataFrame(user_info,index=[0])
     df.to_excel('./target/output.xlsx', index=False)
 
     # 保存到json
